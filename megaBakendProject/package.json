@@ -1,0 +1,21 @@
+{
+  "name": "saadahmed",
+  "version": "1.0.0",
+  "description": "This is just a practice project for node js backend development",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "no"
+  },
+  "author": "saad ahmed",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongoose": "^8.4.1"
+  }
+}
