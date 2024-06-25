@@ -2,7 +2,7 @@ import mongoose ,{Schema} from 'mongoose';
 import bcrypt from 'bcrypt';
 import jsonwebtoken from 'jsonwebtoken';
 
-const jwt = jsonwebtoken()
+const jwt = jsonwebtoken();
 
 // To create the user shcema
 const userSchema = new Schema(
