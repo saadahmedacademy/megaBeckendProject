@@ -7,7 +7,7 @@ const jwt = jsonwebtoken();
 // To create the user shcema
 const userSchema = new Schema(
     {
-        username:{
+     username:{
         type:String,
         required:true,
         lowercase:true,

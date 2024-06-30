@@ -2,6 +2,7 @@ import { ApiError } from '../utils/apiErrors.js';
 import { asyncHandler } from '../utils/async-Handler.js';
 import { User } from '../models/user.model.js';
 import { uploadOnCloudinary } from '../utils/cloudinary.js';
+import { ApiResponse } from '../utils/ApiResponse.js';
 
 const registerUser = asyncHandler(async (req, res) => {
     console.log('Request Body:', req.body); // Log the entire body
@@ -42,7 +43,32 @@ const registerUser = asyncHandler(async (req, res) => {
     if(!avater){
         throw new ApiError(400, 'Avater is required for your profile' );
     }
+
+    //To upload the userdata on database
+    const userData = await User.create({
+        fullname,
+        username: username.toLowerCase(),
+        email,
+        password,
+        avater: avater.url,
+        coverImage: coverImage?.url || ""
+    })
+    console.log(userData);
+
+     // To find the user by id
+    const createdUser = await User.findById(userdata._id).select(
+        "-password -refreshToken"
+    );
+     
+    if(!createdUser){
+        throw new ApiError(500, 'Something went wrong while registering the user' );
+    }
     
+    // return the data from the user createdData
+    res.status(201).json(
+        new ApiResponse( 200,
+            createdUser,
+           'User created successfully'))
 });
 
 export { registerUser };
