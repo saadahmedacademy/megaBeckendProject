@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import express from 'express'
 import { DB_NAME } from '../constants.js';
 
 
@@ -9,8 +8,7 @@ const connectDB = async () =>{
     console.log(`\n The MongoDB connected successfully \n
             ${DB_connection.connection.host}`)
 
-}
-    catch(error){
+}catch(error){
         console.error(`DB_connection Error:  ${error}`)
         process.exit(1)
     }

@@ -1,35 +1,30 @@
 // require('dotenv').config({path:'../.env'});
-import dotenv from 'dotenv'
+import dotenv from 'dotenv';
 import connectDB from './db/connection.js';
 import { app } from './app.js';
 
 dotenv.config({
-    path:'../.env'
-})
+    path: '../.env'
+});
+
 const port = process.env.PORT || 8000;
 
+connectDB().then(() => {
+    const server = app.listen(port, () => {
+        console.log(`Server is running on port ${port}`);
+    });
 
-connectDB().then(() =>{
-    app.listen(port ,() => {
-        console.log(`server is running on port ${port}`)
-    } )
-}).catch((err) => console.error(`Mongo DB connection Faild , ${err.message}`))
+    server.on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+            console.error(`Port ${port} is already in use`);
+            process.exit(1);
+        } else {
+            throw err;
+        }
+    });
+});
 
-
-
-
-
-
-
-
-
-
-
-
-
-// import { DB_NAME } from './constants';
-
-/*
+/* 
 const app = express();
 
 (async ()=>{
@@ -44,7 +39,6 @@ const app = express();
         throw err
     }
 })()
-
 
 app.listen(process.env.PORT , ()=>{
     console.log(`server is running on port ${process.env.PORT}`)
