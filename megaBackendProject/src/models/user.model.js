@@ -2,7 +2,7 @@ import mongoose, { Schema } from 'mongoose';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
-// To create the user schema
+// Create the user schema
 const userSchema = new Schema(
     {
         username: {
@@ -50,7 +50,7 @@ const userSchema = new Schema(
     { timestamps: true }
 );
 
-// To bcrypt the password
+// Hash the password before saving
 userSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();
 
@@ -59,14 +59,14 @@ userSchema.pre('save', async function (next) {
     next();
 });
 
-// To compare the bcrypt password and the user password
+// Compare the hashed password with the user input
 userSchema.methods.isPasswordCorrect = async function (password) {
     return await bcrypt.compare(password, this.password);
 };
 
-// To generate JWT token
-userSchema.methods.generateAccessToken = async function () {
-    return jwt.sign(
+// Generate access token
+userSchema.methods.generateAccessToken = function () {
+    const token = jwt.sign(
         {
             _id: this._id,
             username: this.username,
@@ -76,16 +76,21 @@ userSchema.methods.generateAccessToken = async function () {
         process.env.ACCESS_TOKEN_SECRET,
         { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
     );
+    console.log('Generated Access Token:', token);  // Add this line
+    return token;
 };
 
-userSchema.methods.generateRefreshToken = async function () {
-    return jwt.sign(
+// Generate refresh token
+userSchema.methods.generateRefreshToken = function () {
+    const token = jwt.sign(
         {
             _id: this._id
         },
         process.env.REFRESH_TOKEN_SECRET,
         { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
     );
+    console.log('Generated Refresh Token:', token);  // Add this line
+    return token;
 };
 
 export const User = mongoose.model('User', userSchema);
