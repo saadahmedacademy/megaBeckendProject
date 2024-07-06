@@ -185,16 +185,18 @@ const logoutUser = asyncHandler( async (req, res) =>{
 
 // To referesh the access token after expiry of access token 
 const refreshAccessToken = asyncHandler(async (req,res)=>{
-try {
-  
+
+    
     // To get the refresh token
-   const getToken = req.cookies.refreshToken || req.body.refreshToken || req.headers.authorization;
+    const getToken = req.cookies.refreshToken || req.body.refreshToken || req.headers.authorization;
    
-   // To check if refresh token is there
-   if(!getToken){
-    throw new ApiError(401,"Unauthorized request");
-   }
-  
+    // To check if refresh token is there
+    if(!getToken){
+     throw new ApiError(401,"Unauthorized request");
+    }
+   
+try {
+
    // To verify the refresh token
    const decodedToken = jwt.verify(getToken, process.env.REFRESH_TOKEN_SECRET);
   
