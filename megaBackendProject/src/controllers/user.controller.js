@@ -188,7 +188,7 @@ const refreshAccessToken = asyncHandler(async (req,res)=>{
 
     
     // To get the refresh token
-    const getToken = req.cookies.refreshToken || req.body.refreshToken || req.headers.authorization;
+    const getToken = req.cookies.refreshToken || req.body.refreshToken;
    
     // To check if refresh token is there
     if(!getToken){
@@ -241,6 +241,83 @@ try {
 
  })
 
+// To change current password
+ const changedPassword = asyncHandler(async (req, res)=>{
+   
+  // T get the current password
+  const {oldPassword , newPassword, confPassword} = req.body;
+
+  // To check if the new password and confirm password is same
+  if(newPassword !== confPassword){
+    throw new ApiError(400,"Unsuthorized request : Passwords do not match")
+  }
+
+   const user = await User.findById(req.user._id);
+   
+   // To compare the old password with db password
+   let isPasswordValid = await user.isPasswordCorrect(oldPassword);
+   if(isPasswordValid !== user.password){
+    throw new ApiError(400,"Unsuthorized request : Invalid old password")
+   }
+
+   // To save the new passowrd in db 
+   user.password = newPassword;
+   await user.save({validateBeforeSave: false});
+
+   // To send the response
+   res.status(200)
+   .json(
+    new ApiResponse(200, {},  "Password successfully changed")
+   )
+
+
+ })
+
+ const getCurrentUser = asyncHandler(async (req, res)=>{
+
+  // To send the current user data
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200, req.user, "User data fetched successfully")
+  )
+ })
+
+ // To update the account details
+ const updateAccount = asyncHandler(async (req, res)=>{
+  
+  // To get the body request data
+  let {fullname, email} = req.body;
+
+  if(!(fullname || email)){
+    throw new ApiError(400, "All fileds are required to update the account details")
+  }
+
+  // Find by id and update the user details
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+  {
+    $set:{fullname, email}
+  },
+  {new:true}).select("-password");
+
+  // To return the response
+  res.status(200)
+  .json(
+    new ApiResponse(200, user, "Account details updated successfully")
+  )
+   
+ });
+
+ // To update the media files
+ const updateFile = asyncHandler(async (req, req)=>{
+
+  // To get the body request data
+  const avatarLocalPath = req.file?.avatar[0].path;
+  const coverLocalPath = req.file?.cover[0].path;
+
+  // 
+ })
 export { 
 registerUser,
  loginUser ,
