@@ -317,7 +317,8 @@ try {
   const coverLocalPath = req.file?.cover[0].path;
 
   // 
- })
+ });
+ 
 export { 
 registerUser,
  loginUser ,
