@@ -309,18 +309,93 @@ try {
    
  });
 
- // To update the media files
- const updateFile = asyncHandler(async (req, req)=>{
+ // To update the avatar files
+ const updateUserAvatar = asyncHandler(async (req, req)=>{
 
   // To get the body request data
-  const avatarLocalPath = req.file?.avatar[0].path;
-  const coverLocalPath = req.file?.cover[0].path;
+  const avatarLocalPath = req.file?.path;
+ 
+  // To check if the file is there
+  if(!avatarLocalPath){
+    throw new ApiError(400, "Avatar file is required to update the file");
+  }
 
-  // 
+    // To upload on cloudnary
+    const avatar = await uploadOnCloudinary(avatarLocalPath);
+
+    // To check the uploaded file url
+    if(!avatar.url){
+      throw new ApiError(400, "avatar url not found while uploading on cloudnary");
+    } 
+
+  // To upload the new file on db
+   const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set:{avatar: avatar.url}
+    },
+    {new : true}
+   ).select("-password -refreshToken");
+
+   await user.save({validateBeforeSave: false});
+
+   // To return the response
+
+    return res
+    .status(200)
+    .json(
+      new ApiResponse(200, user, "File updated successfully")
+    )
+ });
+
+
+ 
+ // To update the media files
+ const updateUserCoverImage = asyncHandler(async (req, req)=>{
+
+  // To get the body request data
+  const coverImageLocalPath = req.file?.path;
+ 
+  // To check if the file is there
+  if(!coverImageLocalPath){
+    throw new ApiError(400, "CoverImage file is required to update the file");
+  }
+
+    // To upload on cloudnary
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+
+    // To check the uploaded file url
+    if(!coverImage.url){
+      throw new ApiError(400, "avatar url not found while uploading on cloudnary");
+    } 
+
+  // To upload the new file on db
+   const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set:{coverImage: coverImage.url}
+    },
+    {new : true}
+   ).select("-password -refreshToken");
+    
+   await user.save({validateBeforeSave: false});
+
+   // To return the response
+    return res
+    .status(200)
+    .json(
+      new ApiResponse(200, user, "File updated successfully")
+    )
  });
  
 export { 
 registerUser,
  loginUser ,
  logoutUser ,
- refreshAccessToken};
+ refreshAccessToken
+,updateUserAvatar
+,updateUserCoverImage
+,getCurrentUser
+,updateAccount
+,changedPassword
+};
