@@ -310,92 +310,164 @@ try {
  });
 
  // To update the avatar files
- const updateUserAvatar = asyncHandler(async (req, req)=>{
-
-  // To get the body request data
+ const updateUserAvatar = asyncHandler(async (req, res)=>{
+  
+  // To get avatar local path
   const avatarLocalPath = req.file?.path;
- 
-  // To check if the file is there
-  if(!avatarLocalPath){
-    throw new ApiError(400, "Avatar file is required to update the file");
-  }
 
-    // To upload on cloudnary
+    if (!avatarLocalPath) {
+        throw new ApiError(400, 'Cover image file is required to update the file');
+    }
+     
+    // To upload the new image to cloudinary
     const avatar = await uploadOnCloudinary(avatarLocalPath);
 
-    // To check the uploaded file url
-    if(!avatar.url){
-      throw new ApiError(400, "avatar url not found while uploading on cloudnary");
-    } 
 
-  // To upload the new file on db
-   const user = await User.findByIdAndUpdate(
-    req.user?._id,
-    {
-      $set:{avatar: avatar.url}
-    },
-    {new : true}
-   ).select("-password -refreshToken");
+    // To check the avatar url
+    if (!avatar.url) {
+        throw new ApiError(400, 'Cover image URL not found while uploading to Cloudinary');
+    }
+   
+    // To find the user by id to update avatar
+    const user = await User.findById(req.user._id);
 
-   await user.save({validateBeforeSave: false});
+    if (!user) {
+        throw new ApiError(404, 'User not found');
+    }
 
-   // To return the response
+    // Delete previous cover image from Cloudinary if it exists
+    if (user.coverImage) {
+        await deleteImageFromCloudinary(user.coverImage);
+    }
 
-    return res
-    .status(200)
-    .json(
-      new ApiResponse(200, user, "File updated successfully")
-    )
+    // Update user's cover image URL in the database
+    user.coverImage = coverImage.url;
+    await user.save();
+
+    // Send response
+    return res.status(200).json(new ApiResponse(200, user, 'Cover image updated successfully'));
  });
 
 
  
  // To update the media files
- const updateUserCoverImage = asyncHandler(async (req, req)=>{
-
-  // To get the body request data
+ const updateUserCoverImage = asyncHandler(async (req, res)=>{
   const coverImageLocalPath = req.file?.path;
- 
-  // To check if the file is there
-  if(!coverImageLocalPath){
-    throw new ApiError(400, "CoverImage file is required to update the file");
+
+  if (!coverImageLocalPath) {
+      throw new ApiError(400, 'Cover image file is required to update the file');
   }
 
-    // To upload on cloudnary
-    const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+  const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
-    // To check the uploaded file url
-    if(!coverImage.url){
-      throw new ApiError(400, "avatar url not found while uploading on cloudnary");
-    } 
+  if (!coverImage.url) {
+      throw new ApiError(400, 'Cover image URL not found while uploading to Cloudinary');
+  }
 
-  // To upload the new file on db
-   const user = await User.findByIdAndUpdate(
-    req.user?._id,
-    {
-      $set:{coverImage: coverImage.url}
-    },
-    {new : true}
-   ).select("-password -refreshToken");
-    
-   await user.save({validateBeforeSave: false});
 
-   // To return the response
-    return res
-    .status(200)
-    .json(
-      new ApiResponse(200, user, "File updated successfully")
-    )
+  // Find user by ID to get old cover image URL
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+      throw new ApiError(404, 'User not found');
+  }
+
+  // Delete previous cover image from Cloudinary if it exists
+  if (user.coverImage) {
+      await deleteImageFromCloudinary(user.coverImage);
+  }
+
+  // Update user's cover image URL in the database
+  user.coverImage = coverImage.url;
+  await user.save();
+
+  // Send response
+  return res.status(200).json(new ApiResponse(200, user, 'Cover image updated successfully'));
  });
  
+
+ const getUserChannelProfile = asyncHandler(async (req, res)=>{
+   
+  // To get the username from req.parqams
+  const {username} = req.params;
+  if(!username){
+    throw new ApiError(400, "Username not foun from params");
+  }
+
+  // To find the channal subscriber and whose I subscribed
+  const channal = await User.aggregate([
+      {
+        $match:{
+          username: username
+        }
+      },
+      {
+        $lookup:{
+          from: "subscribtion"
+          ,localField: "_id"
+          ,foreignField: "channel"
+          ,as: "subscribers"
+        }
+      },
+      {
+        $lookup:{
+          from: "subscribtion"
+          ,localField: "_id"
+          ,foreignField: "subscriber"
+          ,as: "subscribedTo"
+        }
+      }
+      ,{
+        $addFields:{
+         subscriberCounts:{
+           $size:"$subscribers"
+         },
+         channalsSubscribedToCounts:{
+           $size:"$subscribedTo"
+         },
+         isSubscribed:{
+          $cond:{
+            if:{$in : [req.user._id ,"$subscribers.subscribers"]},
+            then: true,
+            else: false
+          }
+         }
+        }
+      }
+      ,{
+        $project:{
+          username : 1,
+          fullname : 1,
+          email : 1,
+          avatar : 1,
+          subscriberCounts : 1,
+          channalsSubscribedToCounts : 1,
+          isSubscribed : 1
+        }
+      }
+  ]);
+  
+  // If channal is not exist
+  if(!channal.length){
+    throw new ApiError(400, "Channal dose not exist");
+  }
+
+  // Send response
+  return res
+  .status(200)
+  .json(new ApiResponse(200, channal[0], "Channal profile fetched successfully"));
+
+ });
+
 export { 
 registerUser,
  loginUser ,
- logoutUser ,
+ logoutUser,
  refreshAccessToken
 ,updateUserAvatar
 ,updateUserCoverImage
 ,getCurrentUser
 ,updateAccount
 ,changedPassword
+,getUserChannelProfile
 };
