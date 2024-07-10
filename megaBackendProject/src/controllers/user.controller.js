@@ -459,6 +459,58 @@ try {
 
  });
 
+ const getWatchHistory = asyncHandler(async (req, res)=>{
+  
+  const user = await User.aggregate([
+    {
+      $match:{
+        _id: mongoose.Types.ObjectId(req.user._id)
+      }
+    },
+    {
+      $lootup:{
+        from : "Video",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipline:[
+          {
+            $lookup:{
+              from : "user",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipline:[
+                {
+                  $project:{
+                    username : 1,
+                    fullname : 1,
+                    avatar : 1
+                  }
+                }
+              ]
+            }
+          },
+          {
+            $addFields:{
+              owner:{
+                $first : "$owner"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]);
+
+  // To send the response 
+ return  res
+ .status(200)
+ .json(
+  new ApiResponse(200, user[0], "Watch history fetched successfully")
+ )
+ }) 
+
 export { 
 registerUser,
  loginUser ,
@@ -470,4 +522,5 @@ registerUser,
 ,updateAccount
 ,changedPassword
 ,getUserChannelProfile
+,getWatchHistory
 };
