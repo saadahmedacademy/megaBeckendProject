@@ -160,7 +160,7 @@ const loginUser = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         {
-          user: loggedInUser,
+          user:loggedInUser,
           accessToken,
           refreshToken,
         },
@@ -174,11 +174,11 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
+     // To find the user by id and update the refresh token
   await User.findOneAndUpdate(
-    // To find the user by id and update the refresh token
     req.user._id,
     {
-      $set: { refreshToken: undefined },
+      $unset: { refreshToken: 1 }, // <--- It remove the field from document
     },
     { new: true }
   );
@@ -280,6 +280,7 @@ const changedPassword = asyncHandler(async (req, res) => {
   // Hash the new password before saving it to the database
   const salt = await bcrypt.genSalt(10);
   user.password = await bcrypt.hash(newPassword, salt);
+  
   // To save the new passowrd in db
   user.password = newPassword;
   await user.save({ validateBeforeSave: false });
