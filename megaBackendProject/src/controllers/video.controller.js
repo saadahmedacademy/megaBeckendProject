@@ -152,4 +152,35 @@ const updateVideo = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, 'Video updated successfully', video));
 });
 
-export { publishAVideo, getAllVideos, getVideoById , updateVideo};
+
+const deleteVideo = asyncHandler(async (req, res) => {
+  const { videoId } = req.params
+  
+  if(!videoId){
+    throw new ApiError(404, "Not found video Id from params");
+  }
+
+  const video = await Video.findById(videoId);
+
+  if(!video){
+    throw new ApiError(404, "Not found video from database");
+  }
+  if (video.videoFile) {
+    await deleteImageFromCloudinary(user.coverImage);
+  }
+
+  const deletedVideo = await Video.findByIdAndDelete(videoId);
+
+  if(!deletedVideo){
+    throw new ApiError(404, "Not found video from database");
+  }
+
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200, 'Video deleted successfully', deletedVideo)
+  );
+})
+
+
+export { publishAVideo, getAllVideos, getVideoById , updateVideo ,deleteVideo};
