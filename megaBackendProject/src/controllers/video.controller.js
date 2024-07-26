@@ -128,7 +128,10 @@ const updateVideo = asyncHandler(async (req, res) => {
     console.log(`Thumbnail URL: ${thumbnail.url}`);
 
     if (!thumbnail) {
-      throw new ApiError(400, 'Something went wrong while uploading the thumbnail on Cloudinary');
+      throw new ApiError(
+        400,
+        'Something went wrong while uploading the thumbnail on Cloudinary'
+      );
     }
   }
 
@@ -149,38 +152,58 @@ const updateVideo = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'Video is not found by the given ID');
   }
 
-  res.status(200).json(new ApiResponse(200, 'Video updated successfully', video));
+  res
+    .status(200)
+    .json(new ApiResponse(200, 'Video updated successfully', video));
 });
 
-
 const deleteVideo = asyncHandler(async (req, res) => {
-  const { videoId } = req.params
-  
-  if(!videoId){
-    throw new ApiError(404, "Not found video Id from params");
+  const { videoId } = req.params;
+
+  if (!videoId) {
+    throw new ApiError(404, 'Not found video Id from params');
   }
 
   const video = await Video.findById(videoId);
 
-  if(!video){
-    throw new ApiError(404, "Not found video from database");
+  if (!video) {
+    throw new ApiError(404, 'Not found video from database');
   }
+
   if (video.videoFile) {
-    await deleteImageFromCloudinary(user.coverImage);
+    await deleteImageFromCloudinary(video.videoFile);
   }
 
   const deletedVideo = await Video.findByIdAndDelete(videoId);
 
-  if(!deletedVideo){
-    throw new ApiError(404, "Not found video from database");
+  if (!deletedVideo) {
+    throw new ApiError(404, 'Not found video from database');
   }
 
   return res
-  .status(200)
-  .json(
-    new ApiResponse(200, 'Video deleted successfully', deletedVideo)
-  );
-})
+    .status(200)
+    .json(new ApiResponse(200, 'Video deleted successfully', deletedVideo));
+});
 
+const togglePublishStatus = asyncHandler(async (req, res) => {
+  const { videoId } = req.params;
 
-export { publishAVideo, getAllVideos, getVideoById , updateVideo ,deleteVideo};
+  if (!videoId) {
+    throw new ApiError(404, 'Not found video Id from params');
+  }
+
+  const video = await Video.findById(videoId);
+
+  if (!video) {
+    throw new ApiError(404, 'Not found video from database');
+  }
+
+  video.isPublished = !video.isPublished;
+  await video.save();
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, 'Video status updated successfully', video));
+});
+
+export { publishAVideo, getAllVideos, getVideoById, updateVideo, deleteVideo };
