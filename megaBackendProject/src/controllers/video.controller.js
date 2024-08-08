@@ -1,8 +1,8 @@
-import { Video } from '../models/video.model';
-import { ApiError } from '../utils/apiErrors';
-import { ApiResponse } from '../utils/ApiResponse';
-import { asyncHandler } from '../utils/async-Handler';
-import { uploadOnCloudinary } from '../utils/cloudinary';
+import { Video } from '../models/video.model.js'
+import { ApiError } from '../utils/apiErrors.js';
+import { ApiResponse } from '../utils/ApiResponse.js';
+import { asyncHandler } from '../utils/async-Handler.js';
+import { uploadOnCloudinary } from '../utils/cloudinary.js';
 
 const getAllVideos = asyncHandler(async (req, res) => {
   const {
@@ -49,15 +49,18 @@ const publishAVideo = asyncHandler(async (req, res) => {
   console.log('Request Files:', req.files);
 
   // Destructure necessary fields from request body
-  const { title, thumbnail, description } = req.body;
+  const { title, description } = req.body;
 
   // Validate required fields
-  if ([title, thumbnail, description].some((field) => field?.trim() === '')) {
+  if ([title, description].some((field) => field?.trim() === '')) {
     throw new ApiError(400, 'All video fields are required');
   }
 
   // Get the video file path
   const videoPath = req.files?.videoFile?.[0]?.path;
+
+  // Get the thumbnail file path
+  const thumbnailPath = req.files?.thumbnail?.[0]?.path;
 
   // Check if video file path exists
   console.log('Video Path:', videoPath);
@@ -65,17 +68,24 @@ const publishAVideo = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'videoFile is required to upload the video');
   }
 
-  // Upload video to Cloudinary
-  const video = await uploadOnCloudinary(videoPath);
+  // Check if thumbnail file path exists
+  if (!thumbnailPath) {
+    throw new ApiError(400, 'thumbnail is required to upload the video');
+  }
 
-  // Log video URL
+  // Upload video and thumbnail files to Cloudinary
+  const video = await uploadOnCloudinary(videoPath);
+  const thumbnail = await uploadOnCloudinary(thumbnailPath);
+
+  // Log video and thumbnail URL
   console.log(`Video URL: ${video.url}`);
+  console.log(`Thumbnail URL: ${thumbnail.url}`);
 
   // Create video document in the database
   const uploadVideo = await Video.create({
     videoFile: video?.url || '',
     title,
-    thumbnail,
+    thumbnail : thumbnail?.url || '',
     description,
   });
 
@@ -206,4 +216,4 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, 'Video status updated successfully', video));
 });
 
-export { publishAVideo, getAllVideos, getVideoById, updateVideo, deleteVideo };
+export { publishAVideo, getAllVideos, getVideoById, updateVideo, deleteVideo ,togglePublishStatus};

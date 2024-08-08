@@ -5,14 +5,15 @@ import {
   getVideoById,
   updateVideo,
   deleteVideo,
+  togglePublishStatus
 } from '../controllers/video.controller.js';
 import { upload } from '../middlewares/multer.middleware.js';
 import { verifyJWT } from '../middlewares/logout.middleware.js';
 
-const router = Router();
-router.use(verifyJWT); // Apply verifyJWT middleware to all routes in this file
+let videoRoute = Router();
+videoRoute.use(verifyJWT); // Apply verifyJWT middleware to all routes in this file
 
-router
+videoRoute
   .route('/')
   .get(getAllVideos)
   .post(
@@ -29,12 +30,12 @@ router
     publishAVideo
   );
 
-router
+  videoRoute
   .route('/:videoId')
   .get(getVideoById)
   .delete(deleteVideo)
   .patch(upload.single('thumbnail'), updateVideo);
 
-router.route('/toggle/publish/:videoId').patch(togglePublishStatus);
+  videoRoute.route('/toggle/publish/:videoId').patch(togglePublishStatus);
 
-export default videoRouter;
+export default videoRoute
