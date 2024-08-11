@@ -55,45 +55,38 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, 'Playlists retrieved successfully', playlists));
 });
 
+
 const addVideoToPlaylist = asyncHandler(async (req, res) => {
   const { playlistId, videoId } = req.params;
 
+  // Validate playlistId and videoId
   if (!playlistId || !videoId) {
-    throw new ApiError(
-      400,
-      'Playlist ID and video ID are required to add video in playlist'
-    );
+    throw new ApiError(400, 'Playlist ID and video ID are required to add video in playlist');
   }
 
+  // Check if the video exists
   const video = await Video.findById(videoId);
   if (!video) {
-    throw new ApiError(404, 'Video not found to add the playlist');
+    throw new ApiError(404, 'Video not found to add to the playlist');
   }
-  const updatedPlaylist = await Playlist.findByIdAndUpdate(playlistId, {
-    $addToSet: {
-      videos: videoId,
-    },
-    $set: {
-      updatedAt: Date.now(),
-    },
-  });
 
+  // Add the video to the playlist if it's not already there
+  const updatedPlaylist = await Playlist.findByIdAndUpdate(
+    playlistId,
+    {
+      $addToSet: { videos: videoId }, // Prevent duplicates
+      $set: { updatedAt: Date.now() }, // Update the timestamp
+    },
+    { new: true } // Return the updated document
+  ).populate('videos'); // Populate videos to return the full video data
+
+  // Check if the playlist update was successful
   if (!updatedPlaylist) {
-    throw new ApiError(
-      400,
-      'Something went wrong while adding video in playlist'
-    );
+    throw new ApiError(400, 'Something went wrong while adding video to playlist');
   }
 
-  res
-    .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        'Video added in playlist successfully',
-        updatedPlaylist
-      )
-    );
+  // Respond with the updated playlist
+  res.status(200).json(new ApiResponse(200, 'Video added to playlist successfully', updatedPlaylist));
 });
 
-export { createPlaylist, getUserPlaylists };
+export { createPlaylist, getUserPlaylists ,addVideoToPlaylist};
