@@ -55,13 +55,15 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, 'Playlists retrieved successfully', playlists));
 });
 
-
 const addVideoToPlaylist = asyncHandler(async (req, res) => {
   const { playlistId, videoId } = req.params;
 
   // Validate playlistId and videoId
   if (!playlistId || !videoId) {
-    throw new ApiError(400, 'Playlist ID and video ID are required to add video in playlist');
+    throw new ApiError(
+      400,
+      'Playlist ID and video ID are required to add video in playlist'
+    );
   }
 
   // Check if the video exists
@@ -82,20 +84,33 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
 
   // Check if the playlist update was successful
   if (!updatedPlaylist) {
-    throw new ApiError(400, 'Something went wrong while adding video to playlist');
+    throw new ApiError(
+      400,
+      'Something went wrong while adding video to playlist'
+    );
   }
 
   // Respond with the updated playlist
-  res.status(200).json(new ApiResponse(200, 'Video added to playlist successfully', updatedPlaylist));
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        'Video added to playlist successfully',
+        updatedPlaylist
+      )
+    );
 });
-
 
 const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
   const { playlistId, videoId } = req.params;
 
   // Validate playlistId and videoId
   if (!playlistId || !videoId) {
-    throw new ApiError(400, 'Playlist ID and video ID are required to delete video from playlist');
+    throw new ApiError(
+      400,
+      'Playlist ID and video ID are required to delete video from playlist'
+    );
   }
 
   // To find playlist by id
@@ -121,11 +136,44 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
 
   // Check if the playlist update was successful
   if (!updatedPlaylist) {
-    throw new ApiError(400, 'Something went wrong while deleting video from playlist');
+    throw new ApiError(
+      400,
+      'Something went wrong while deleting video from playlist'
+    );
   }
 
   // Respond with the updated playlist
-  res.status(200).json(new ApiResponse(200, 'Video removed from playlist successfully', updatedPlaylist));
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        'Video removed from playlist successfully',
+        updatedPlaylist
+      )
+    );
+});
+
+const deletePlaylist = asyncHandler(async (req, res) => {
+  const { playlistId } = req.params;
+
+  // Validate the playlistId
+  if (!playlistId) {
+    throw new ApiError(400, 'Playlist ID is required');
+  }
+
+  // Find and delete the playlist by ID
+  const deletedPlaylist = await Playlist.findByIdAndDelete(playlistId);
+
+  // Handle the case where the playlist is not found
+  if (!deletedPlaylist) {
+    throw new ApiError(404, 'Playlist not found with this ID');
+  }
+
+  // Return a success response with the deleted playlist details
+  return res.json(
+    new ApiResponse(200, 'Playlist deleted successfully', deletedPlaylist)
+  );
 });
 
 
@@ -134,4 +182,5 @@ export {
   getUserPlaylists,
   addVideoToPlaylist,
   removeVideoFromPlaylist,
-}
+  deletePlaylist,
+};
