@@ -171,11 +171,53 @@ const deletePlaylist = asyncHandler(async (req, res) => {
   }
 
   // Return a success response with the deleted playlist details
-  return res.json(
-    new ApiResponse(200, 'Playlist deleted successfully', deletedPlaylist)
-  );
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, 'Playlist deleted successfully', deletedPlaylist)
+    );
 });
 
+const updatePlaylist = asyncHandler(async (req, res) => {
+  const { playlistId } = req.params;
+  const { name, description } = req.body;
+
+  // Validate that name and description are provided
+  if (!name || !description) {
+    throw new ApiError(
+      400,
+      'Name and description are required to update the playlist'
+    );
+  }
+
+  // Validate that playlistId is provided
+  if (!playlistId) {
+    throw new ApiError(404, 'Playlist ID is required to update the playlist');
+  }
+
+  // Find the playlist by ID and update it
+  const updatedPlaylist = await Playlist.findByIdAndUpdate(
+    playlistId,
+    {
+      name,
+      description,
+      updatedAt: Date.now(),
+    },
+    { new: true } // Return the updated document
+  );
+
+  // Check if the update was successful
+  if (!updatedPlaylist) {
+    throw new ApiError(400, 'Something went wrong while updating the playlist');
+  }
+
+  // Return a success response with the updated playlist
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, 'Playlist updated successfully', updatedPlaylist)
+    );
+});
 
 export {
   createPlaylist,
@@ -183,4 +225,5 @@ export {
   addVideoToPlaylist,
   removeVideoFromPlaylist,
   deletePlaylist,
+  updatePlaylist,
 };
