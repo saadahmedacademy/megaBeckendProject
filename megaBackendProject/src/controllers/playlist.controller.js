@@ -4,7 +4,7 @@ import { ApiResponse } from '../utils/ApiResponse.js';
 import { Video } from '../models/video.model.js';
 
 const createPlaylist = asyncHandler(async (req, res) => {
-  const { name, description, videoIds } = req.body;
+  const { name, description } = req.body;
 
   // Validate the required fields
   if (!name || !description) {
@@ -19,7 +19,6 @@ const createPlaylist = asyncHandler(async (req, res) => {
   const playlist = new Playlist({
     name,
     description,
-    videos: videoIds,
     owner: videoOwner,
   });
 
